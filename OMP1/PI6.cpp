@@ -8,7 +8,7 @@ double step;
 int main(int argc, char* argv[])
 {
 
-	const int threads = 2;
+	const int threads = 8;
 	omp_set_num_threads(threads);
 
 	clock_t start, stop;
@@ -16,7 +16,6 @@ int main(int argc, char* argv[])
 	double x, pi, sum = 0.0, tab[threads];
 	int i;
 	step = 1. / (double)num_steps;
-	//start = clock();
 	start_omp = omp_get_wtime();
 #pragma omp parallel
 	{
@@ -35,13 +34,9 @@ int main(int argc, char* argv[])
 	}
 
 	pi = sum * step;
-	//stop = clock();
 	stop_omp = omp_get_wtime();
 
 	printf("Wartosc liczby PI wynosi %15.12f\n", pi);
-	//printf("Czas przetwarzania wynosi %f sekund\n", \
-		((double)(stop - start) / 1000.0));
-	printf("Rzeczywisty czas przetwarzania wynosi %f sekund\n", \
-		((double)(stop_omp - start_omp) ));
+	printf("Rzeczywisty czas przetwarzania wynosi %f sekund\n", (stop_omp - start_omp));
 	return 0;
 }
