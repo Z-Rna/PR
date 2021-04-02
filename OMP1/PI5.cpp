@@ -9,7 +9,6 @@ int main(int argc, char* argv[])
 {
 	omp_set_num_threads(2);
 
-	clock_t start, stop;
 	double start_omp, stop_omp;
 	double x, pi, sum = 0.0;
 	int i;
