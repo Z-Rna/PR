@@ -68,33 +68,35 @@ PI6                       & 3.21                   & 2.32                   & 1.
 
 \section{Omówienie działania programów}
 \subsection{PI2}
-Wprowadzając derektywę $\#pragma\:omp\:paralel\:for$ sprawiono, że zmienna $i$ jest prywatną. Pozostałe zmienne są współdzielone.\\
+Wprowadzając derektywę $\#pragma\:omp\:paralel\:for$ sprawiono, że zmienna $i$ stała się prywatną. Pozostałe zmienne są współdzielone.\\
 Znaczącym problemem jest współdzielenie zmiennych $x$ oraz $sum$- są dostępne do odczytu i zapisu. Prywatność zmiennej $x$ możemy uzyskać dzięki każdorazowej deklaracji zmiennej w pętli. Współdzielenie jej jest niepoprawne- każdy wątek oblicza własną wartość. \\
-Wieloktrotny zapis i odczyt zmiennej $sum$ powoduje wyścig- możliwość niesynchronizowanych dostępów. Zapis powoduje unieważnienie kopii linii zawierającej tą zmienną w innym procesorze, czego następstwem jest nieporpawny wynik końcowy.\\
-Przewidzane przyspieszenie nie występuje w każdym przypadku, ze względu na powyższe problemy z poprawnoscią dostępu do zmiennych. 
+Wielokrotny zapis i odczyt zmiennej $sum$ powoduje wyścig- możliwość niesynchronizowanych dostępów. Zapis powoduje unieważnienie kopii linii zawierającej tą zmienną w innym procesorze, czego następstwem jest niepoprawny wynik końcowy.\\
+Przewidziane przyspieszenie nie występuje w każdym przypadku, ze względu na powyższe problemy z poprawnością dostępu do zmiennych.
 \subsection{PI3}
-W tym przykadzie lokalność zmiennych nie ulega zmianie. Upewniono się, że zmienna $x$ jest prywatna dla każdego wątku.\\
+W tym przykładzie lokalność zmiennych nie ulega zmianie. Upewniono się, że zmienna $x$ jest prywatna dla każdego wątku.\\
 Efektem użycia dyrektywy $\#pragma\:omp\:atomic$ jest otrzymanie dobrego wyniku. Czas wykonywania obliczeń uległ pogorszeniu. Jest to spowodowane charakterystyką dyrektywy.\\
-Dyrektywa $\#pragma\:omp\:atomic$ wymusza niepodzielność podczas odczytu oraz zapisu zmiennej $sum$, będącą zmienną współdzielną przez wszystkie wątki, które jest wykonywane w sposób sekwencyjny. \\
+Dyrektywa $\#pragma\:omp\:atomic$ wymusza niepodzielność podczas operacji\\
+odczytu oraz zapisu zmiennej $sum$, będącą zmienną współdzieloną przez wszystkie wątki, które są wykonywane w sposób sekwencyjny. \\
 Zapewnia również synchronizację na poziomie sprzętowym, czego konsekwencją jest unieważnienie linii pamięci na wszystkich innych procesorach oraz pamięci operacyjnej, które zawierają tą zmienną. Synchronizacja wątków jest realizowana za pomocą zakładanej blokady.\\
 W celu zapewnienia atomowości uaktualnienia zmiennej współdzielonej w systemie, można skorzystać z dyrektywy $\#pragma\:omp\:critical$.
 \subsection{PI4}
-W celu unieknięcia wieloktornego zapisu i odczytu zmiennej $sum$ używając dyrektywy $\#pragma\:omp\:atomic$, wprowadzono zmienną prywatne $sum1$, przechowującą sumy dla poszczególnych wątków. \\
-Dyrektywa $\#pragma\:omp\:atomic$ w dalszym ciągu jest używana przy końcowym zapisie do zmiennej- w tym przypadku odbywa się to poza pętlą, zatem każdy wątek robi to tylko raz na sam koniec.\\
-Lokalność innych zmiennych nie uległa zmienie.
-\subsection{PI5}
-Wprowadzneie klauzuli $reduction(+:sum)$ dodanej do $\#pragma\:omp\:for$ zapewnia prywartność zmiennej $sum$, mimo jej deklaracji poza pętlą- za każdym razem tworzona nowa, prywatna zmienna.\\
-Pisząc $reduction(\+:sum)$ informujemy kompilator, że do zmiennej $sum$ będziemy dodawać kolejno wyliczone wartości właśnie tej zmiennej. Kompilator utworzy odpowiednią liczbę prywatnych kopii zmiennej dla każdego wątku i rozdzieli iteracje pomiędzy dostępne wątki. Każdy wątek będzie operował tylko na swojej kopii zmiennej $sum$. Po wykonaniu wszystkich iteracji, wartości wyliczone przez wszystkie wątki są do siebie dodawane. Obliczona wartość zmiennej $sum$ typu reduction jest dostępna poza sekcją parallel.\\
-Zastosowanie klauzuli jest równoważne z operacjami w PI4. Czasy przetważania są bardzo podobne, biorąc pod uwagę ich szybkość wykoanania.\\
-Trzeba pamiętać, że obecne rozwiązanie ma swoje wady- przy większych, pod względem zajmowanej pamięci, strukturach może zdarzyć się, że obiekt nie zmieści się na pamieci poziomu pierwszego. Wątek traci czas na ubieganie się o miejsce na zapis zmiennej, co powoduje dłuższe przetwarzanie. 
+W celu unieknięcia wieloktornego zapisu i odczytu w pętli zmiennej $sum$ używając dyrektywy $\#pragma\:omp\:atomic$, wprowadzono zmienną prywatne\\
+$sum1$, przechowującą sumy dla poszczególnych wątków. \\
+Dyrektywa $\#pragma\:omp\:atomic$ jest używana poza pętlą, przy
+końcowym zapisie do zmiennej. Każdy wątek wykonuje tę operację tylko raz na sam koniec.\\
+Zmienna $sum$ jest współdzielona przez wiele wątków. Lokalność innych zmiennych nie uległa zmianie. 
+\subsection{PI5}Wprowadzenie klauzuli $reduction(+:sum)$ dodanej do $\#pragma\:omp\:for$ zapewnia prywatność zmiennej $sum$, mimo jej deklaracji poza pętlą- za każdym razem tworzona nowa, prywatna zmienna. Reszta lokalności niezmienona. \\
+Pisząc $reduction(+:sum)$ informujemy kompilator, że do zmiennej $sum$ będziemy dodawać kolejno wyliczone wartości właśnie tej zmiennej. Kompilator utworzy odpowiednią liczbę prywatnych kopii zmiennej dla każdego wątku i rozdzieli iteracje pomiędzy dostępne wątki. Każdy wątek będzie operował tylko na swojej kopii zmiennej $sum$. Po wykonaniu wszystkich iteracji, wartości wyliczone przez wszystkie wątki są do siebie dodawane. Obliczona wartość zmiennej $sum$ typu reduction jest dostępna poza sekcją parallel.\\
+Zastosowanie klauzuli jest równoważne z operacjami w PI4. Czasy przetwarzania są bardzo podobne, biorąc pod uwagę ich szybkość wykonania.\\
+Trzeba pamiętać, że obecne rozwiązanie ma swoje wady- przy większych, pod względem zajmowanej pamięci, strukturach może zdarzyć się, że obiekt nie zmieści się na pamięci poziomu pierwszego. Wątek traci czas na ubieganie się o miejsce na zapis zmiennej, co powoduje dłuższe przetwarzanie.
 \subsection{PI6}
 W tym przykładzie zastosowano tablicę jako strukturę przechowująca zmienne prywatne, wywoływane unikalnymi numerami id danego wątku. \\
-Trzeba pamiętać o tym, że lokalność zmiennych uwzględniona w kodzie programu, będąca rozwiązaniem koncepcyjnie lokalnym, nie jest tym samym co lokalność z poziomu linni pamięci.\\
-Istnieje możliwość wystąpienia długiego przetwarzania programu. Jest to spowodowane tym, iż elementy tablicy są położone najprawdopodobniej w tej samej linii pamieci podręcznej. Możliwe jest wystąpenie false sharingu- podczas zapisu wartości do zmiennej przez dany wątek, może nastąpić unieważnienie linni pamieci, z której korzystaja inne wątki, czego natsępstwem moze być wydłużenie czasu przetwarzania.
+Trzeba pamiętać o tym, że lokalność zmiennych uwzględniona w kodzie programu, będąca rozwiązaniem koncepcyjnie lokalnym, nie jest tym samym co lokalność z poziomu linii pamięci. Lokalność innych zmiennych niezmienona.\\
+Istnieje możliwość wystąpienia długiego przetwarzania programu. Jest to spowodowane tym, iż elementy tablicy mogą być położone w tej samej linii pamięci podręcznej. Jest to przykład wystąpienia false sharingu- podczas zapisu wartości do zmiennej przez dany wątek, może nastąpić unieważnienie linii pamięci, z której korzystają inne wątki, czego następstwem może być wydłużenie czasu przetwarzania.
 \subsection{PI7}
 Eksperyment miał na celu wyznaczenie długości linii pamięci podręcznej procesora. \\
-W celu otrzymania tej informacji, wykonujemy przetwarzanie na dwóch sąsiednich elementach tablicy. Podczas przetwarzania można zaobserować moment, w którym czas przetwarznaia skraca się. Jest to spowodowane zniwelowaniem false sharingu- jeden z wątków pracuje na wczesniej wykorzystywanej linii pamięci, kiedy drugi przechodzi już na nową.\\
-Powyższa sytuacja powtarza się cyklinie co 8 iteracji. Mając na uwadze wielkość zmiennej typu $double$ równą $8B$ można wyznaczyć długość linii pamięci podręcznej procesora:
+W celu otrzymania tej informacji, wykonujemy przetwarzanie na dwóch, iterujących się, sąsiednich elementach tablicy. Podczas przetwarzania można zaobserwować moment, w którym czas przetwarzania skraca się. Jest to spowodowane zniwelowaniem false sharingu- jeden z wątków pracuje na wcześniej wykorzystywanej linii pamięci, kiedy drugi przechodzi już na nową.\\
+Powyższa sytuacja powtarza się cyklicznie co 8 iteracji. Mając na uwadze wielkość zmiennej typu $double$ równą $8B$ można wyznaczyć długość linii pamięci podręcznej procesora, zgodną z architekturą komputera:
 \begin{center}
     $8 * 8 = 64B$
 \end{center}
