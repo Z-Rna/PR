@@ -1,0 +1,76 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{listings}
+\usepackage[polish]{babel}
+\usepackage{polski}
+\usepackage{hhline}
+\usepackage{multirow}
+% to make simple tables i use: https://www.tablesgenerator.com/
+
+
+\title{OpenMP Raport}
+\author{Zuzanna Rękawek}
+\date{Kwiecień 2021}
+
+\begin{document}
+\maketitle
+
+\section{Specyfikacja}
+\begin{itemize}
+    \item Procesory logiczne: 4
+    \item Procesory logiczne: 8
+    \item OS: Windows 10
+    \item Typ systemu: x64
+\end{itemize}
+Zadanie zostało wykonane przy użyciu środowiska Microsoft Visual Studio 2019. \\
+Wszystkie programy zostały skompilowane z konfiguracją Release, a następnie uruchomione bez debbugowania. 
+
+\section{Przetwarzanie sekwencyjne}
+Czas wykonywania obliczeń: 0.196[s]
+
+\section{Pomiary czasu}
+Poniższe wartości prezentują długość przetwarzania dla kolejnych wersji kodu w sekundach- podstawowej jednostce czasu układu SI.\\
+Wyniki zostały zmierzone dzięki funkcji $omp\_get\_wtime()$ z biblioteki OMP. \\
+\begin{table}[!htb]
+\centering
+\begin{tabular}{|c|l|l|l|c|}
+\hline
+\multirow{2}{*}{Zad1} & \multicolumn{3}{c|}{Wątki}                                               & \multirow{2}{*}{Wynik} \\ \cline{2-4}
+                      & \multicolumn{1}{c|}{8} & \multicolumn{1}{c|}{4} & \multicolumn{1}{c|}{2} &                        \\ \hline
+PI2                   & 0.247108              & 0.168973               & 0.157797               & niepoprawny            \\ \hline
+PI3                   & 10.911656              & 7.476831               & 4.132476               & poprawny               \\ \hline
+PI4                   & 0.080543               & 0.109149               & 0.115842               & poprawny               \\ \hline
+PI5                   & 0.047536               & 0.061145               & 0.114769               & poprawny               \\ \hline
+PI6                   & 0.061080               & 0.084447               & 0.105977               & poprawny               \\ \hline
+\end{tabular}
+\caption{czasy przetwarzania}
+\end{table}
+
+\newpage
+
+\section{Omówienie działania programów}
+\subsection{PI2}
+Wprowadzając derektywę $\#pragma\:omp\:paralel\:for$ sprawiono, że zmienna $i$ jest prywatną. Pozostałe zmienne są współdzielone.\\
+Znaczącym problemem jest współdzielenie zmiennych $x$ oraz $sum$- są dostępne do odczytu i zapisu. Prywatność zmiennej $x$ możemy uzyskać dzięki każdorazowej deklaracji zmiennej w pętli. Współdzielenie jej jest niepoprawne- każdy wątek oblicza własną wartość. \\
+Wieloktrotny zapis i odczyt zmiennej $sum$ powoduje wyścig- możliwość niesynchronizowanych dostępów. Zapis powoduje unieważnienie kopii linii zawierającej tą zmienną w innym procesorze, czego następstwem jest nieporpawny wynik końcowy.\\
+Przewidzane przyspieszenie nie występuje w każdym przypadku, ze względu na powyższe problemy z poprawnoscią dostępu do zmiennych. 
+\subsection{PI3}
+W tym przykadzie lokalność zmiennych nie ulega zmianie. Upewniono się, ze zmienna $x$ jest prywatna dla każdego wątku.\\
+Efektem użycia dyrektywy $\#pragma\:omp\:atomic$ jest otrzymanie dobrego wyniku. Czas wykonywania obliczeń uległ pogorszeniu. Jest to spowodowane charakterystyką dyrektywy.\\
+Dyrektywa $\#pragma\:omp\:atomic$ wymusza niepodzielnośc podczas odczu oraz zapisu zmiennej $sum$, będącą zmienną współdzielną przez wszystkie wątki, jest wykonywane sekwencyjnie. \\
+Zapewnia również synchronizację na poziomie sprzętowym, czego konsekwencją jest unieważnienie linni pamięci na wszystkich innych procesorach oraz pamięci operacyjnej, które zawierają tą zmienną. Synchronizacja wątków jest realizowana za pomocą zakładanego zamka.
+\subsection{PI4}
+W celu unieknięcia wieloktornego zapisu i odczytu zmiennej $sum$ uzywajac dyrektywy $\#pragma\:omp\:atomic$, wprowadzono zmienną prywatne $sum1$, przechowującą sumy dla poszczególnych wątków. \\
+Dyrektywa $\#pragma\:omp\:atomic$ w dalszym ciągu jest używana przy końcowym zapisie do zmiennej- w tym przypadku odbywa się to poza pętlą, więć kazdy wątek robi to tylko raz na sam koniec.
+Lokalnosc innych zmiennych nie uległa zmienie.
+\subsection{PI5}
+Wprowadzneie klauzuli $reduction(+:sum)$ dodanej do $\#pragma\:omp\:for$ zapewnia prywartność zmiennej $sum$, mimo jej deklaracji poza pętlą- za każdym razem tworzona nowa, prywatna zmienna.\\
+Pisząc $reduction(\+:sum)$ informujemy kompilator, że do zmiennej $sum$ będziemy dodawać kolejno wyliczone wartości właśnie tej zmiennej. Kompilator utworzy odpowiednią liczbę prywatnych kopii zmiennej dla każdego wątku i rozdzieli iteracje pomiędzy dostępne wątki. Każdy wątek będzie operował tylko na swojej kopii zmiennej $sum$. Po wykonaniu wszystkich iteracji, wartości wyliczone przez wszystkie wątki są do siebie dodawane. Obliczona wartość zmiennej $sum$ typu reduction jest dostępna poza sekcją parallel.\\
+Zastosowanie klauzuli jest równoważne z operacjami w PI4. Czasy przetważania są bardzo podobne, biorąc pod uwagę ich szybkośćwykoanania.\\
+Trzeba pamiętać, że obecne rozwiązanie ma swoje wady- przy większych, pod względem zajmowanej pamięci, strukturach może zdarzyć się, że obiekt nie mieści się na pamieci poziomu pierwszego. Wątek traci czas na ubieganie się o miejsce na zapis zmiennej, co powoduje dłuższe przetwarzanie. 
+\subsection{PI6}
+W tym przykładzie zasowano tablicę jako strukturę przechowująca zmienne prywatne, wywoływane unikalnymi numerami id danego wątku. \\
+Problem z odwoływaniem się do tego samego słowa
+\subsection{PI7}
+Celem eksperymentu było wyznaczenie długości linii pamięci poprzez znalezienie adresów odpowiadających początkom i końcom linii. Aby to osiągnąć należało ustawić dwa wątki tak, by pracowały na sąsiednich elementach tablicy: 0 i 1, 1 i 2, ... Dzięki temu możliwym do zaobserwowania był moment, gdy jeden z watków pracował wciąż na jednej lini pamięci, a drugi przechodził już na kolejną: następowało wtedy przyspieszenie działania z powodu braku false sharingu. Wyznaczenie linii pamięci można obliczyć z częstotliwości pojawiania się przyspieszeń, w tym przypadku 8 * 8 (8=sizeof(double)) = 64B. Taka długość linii pamięci podręcznej procesora jest zgodna z architekturą komputera (x64). 
+\end{document}
