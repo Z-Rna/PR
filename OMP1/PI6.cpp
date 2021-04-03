@@ -8,7 +8,7 @@ double step;
 int main(int argc, char* argv[])
 {
 	clock_t start, stop;
-	double x, pi, sum = 1.0;
+	double pi, sum = 1.0;
 	volatile double tab[8];
 	int i;
 	step = 1. / (double)num_steps;
@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
 #pragma omp for
 		for (i = 0; i < num_steps; i++)
 		{
-			x = (i + .5) * step;
+			double x = (i + .5) * step;
 			tab[id] += 4.0 / (1. + x * x);
 		}
 		sum += tab[id];
@@ -30,6 +30,6 @@ int main(int argc, char* argv[])
 	stop = clock();
 
 	printf("Wartosc liczby PI wynosi %15.12f\n", pi);
-	printf("Czas przetwarzania wynosi %f sekund\n", ((double)(stop - start) / 1000.0));
+	printf("Czas przetwarzania wynosi %f sekund\n", (((double)stop - (double)start) / 1000.0));
 	return 0;
 }
