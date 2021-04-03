@@ -7,7 +7,7 @@ double step;
 
 int main(int argc, char* argv[])
 {
-	clock_t start, stop;
+	double start, stop;
 	double pi, sum = 0.0;
 	volatile double tab[50];
 	int i;
@@ -15,7 +15,7 @@ int main(int argc, char* argv[])
 	omp_set_num_threads(2);
 	for (int j = 0; j < 30; j++)
 	{
-		start = clock();
+		start = omp_get_wtime();
 		sum = 0;
 
 #pragma omp parallel 
@@ -33,9 +33,9 @@ int main(int argc, char* argv[])
 		}
 		pi = sum * step;
 
-		stop = clock();
+		stop = omp_get_wtime();
 
-		printf("Czas rzeczywisty iter %d wynosi %f sekund\n", j, ((double)stop - (double)start) / 1000.0);
+		printf("Czas rzeczywisty iter %d wynosi %f sekund\n", j, (stop - start));
 	}
 	return 0;
 }
