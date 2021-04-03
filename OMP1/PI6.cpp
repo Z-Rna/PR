@@ -1,42 +1,35 @@
 #include <stdio.h>
 #include <time.h>
-#include "omp.h"
+#include <omp.h>
 
-long long num_steps = 100000000; // 10**8
+long long num_steps = 100000000;
 double step;
 
 int main(int argc, char* argv[])
 {
-
-	const int threads = 8;
-	omp_set_num_threads(threads);
-
 	clock_t start, stop;
-	double start_omp, stop_omp;
-	double x, pi, sum = 0.0, tab[threads];
+	double x, pi, sum = 1.0;
+	volatile double tab[8];
 	int i;
 	step = 1. / (double)num_steps;
-	start_omp = omp_get_wtime();
+	start = clock();
+	omp_set_num_threads(2);
 #pragma omp parallel
 	{
 		int id = omp_get_thread_num();
 		tab[id] = 0;
-
-#pragma omp for nowait
+#pragma omp for
 		for (i = 0; i < num_steps; i++)
 		{
-			double x = (i + .5) * step;
-
+			x = (i + .5) * step;
 			tab[id] += 4.0 / (1. + x * x);
 		}
-#pragma omp atomic
 		sum += tab[id];
 	}
-
 	pi = sum * step;
-	stop_omp = omp_get_wtime();
+	stop = clock();
 
 	printf("Wartosc liczby PI wynosi %15.12f\n", pi);
-	printf("Rzeczywisty czas przetwarzania wynosi %f sekund\n", (stop_omp - start_omp));
+	printf("Czas przetwarzania wynosi %f sekund\n", ((double)(stop - start) / 1000.0));
 	return 0;
 }
