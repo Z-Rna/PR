@@ -44,7 +44,7 @@ PI2                   & 0.152412               & 0.168973               & 0.1886
 PI3                   & 10.911656              & 7.476831               & 4.132476               & poprawny               \\ \hline
 PI4                   & 0.080543               & 0.109149               & 0.115842               & poprawny               \\ \hline
 PI5                   & 0.047536               & 0.061145               & 0.114769               & poprawny               \\ \hline
-PI6                   & 0.061080               & 0.084447               & 0.105977               & poprawny               \\ \hline
+PI6                   & 1.023280               & 0.286450               & 0.190930               & poprawny               \\ \hline
 \end{tabular}
 \caption{czasy przetwarzania}
 \end{table}
@@ -59,7 +59,7 @@ PI2                       & 1.29                   & 1.16                   & 1.
 PI3                       & 0.02                   & 0.03                   & 0.05                   \\ \hline
 PI4                       & 2.43                   & 1.80                   & 1.69                   \\ \hline
 PI5                       & 4.12                   & 3.21                   & 1.71                   \\ \hline
-PI6                       & 3.21                   & 2.32                   & 1.85                   \\ \hline
+PI6                       & 0.19                   & 0.68                   & 1.02                   \\ \hline
 \end{tabular}
 \caption{przyspieszenia}
 \end{table}
@@ -92,7 +92,7 @@ Trzeba pamiętać, że obecne rozwiązanie ma swoje wady- przy większych, pod w
 \subsection{PI6}
 W tym przykładzie zastosowano tablicę jako strukturę przechowująca zmienne prywatne, wywoływane unikalnymi numerami id danego wątku. \\
 Trzeba pamiętać o tym, że lokalność zmiennych uwzględniona w kodzie programu, będąca rozwiązaniem koncepcyjnie lokalnym, nie jest tym samym co lokalność z poziomu linii pamięci. Lokalność innych zmiennych niezmienona.\\
-Istnieje możliwość wystąpienia długiego przetwarzania programu. Jest to spowodowane tym, iż elementy tablicy mogą być położone w tej samej linii pamięci podręcznej. Jest to przykład wystąpienia false sharingu- podczas zapisu wartości do zmiennej przez dany wątek, może nastąpić unieważnienie linii pamięci, z której korzystają inne wątki, czego następstwem może być wydłużenie czasu przetwarzania.
+Program przetwarza się długo. Jest to spowodowane tym, iż elementy tablicy mogą być położone w tej samej linii pamięci podręcznej. Jest to przykład wystąpienia false sharingu- podczas zapisu wartości do zmiennej przez dany wątek, może nastąpić unieważnienie linii pamięci, z której korzystają inne wątki, czego następstwem może być wydłużenie czasu przetwarzania.
 \subsection{PI7}
 Eksperyment miał na celu wyznaczenie długości linii pamięci podręcznej procesora. \\
 W celu otrzymania tej informacji, wykonujemy przetwarzanie na dwóch, iterujących się, sąsiednich elementach tablicy. Podczas przetwarzania można zaobserwować moment, w którym czas przetwarzania skraca się. Jest to spowodowane zniwelowaniem false sharingu- jeden z wątków pracuje na wcześniej wykorzystywanej linii pamięci, kiedy drugi przechodzi już na nową.\\
